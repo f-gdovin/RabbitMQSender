@@ -18,44 +18,45 @@ public class Main {
 
     public static void main(String[] args){
 
-        int sleepTime = 3000; //time between events in ms
+        //useless in one thread
+        int sleepTime = 3000; //time between events in ms for first stream
+        int sleepTime2 = 1000; //time between events in ms for second stream
 
         File myFile = new File("C:\\jsonInput.json");
         File myFile2 = new File("C:\\jsonInput2.json");
 
-        if(args.length > 0){ //definovanie vlastneho suboru ako 1. vstupny parameter
+        if(args.length > 0){
             myFile = new File(args[0]);
         }
 
         try{
+            //send contents of file
             FileReader inputFile = new FileReader(myFile);
             BufferedReader bufferReader = new BufferedReader(inputFile);
-            String line;
-
-            //send contents of file
-            System.out.println("Sending events from file " + myFile.getAbsolutePath().toString()+ "...");
-
-            while ((line = bufferReader.readLine()) != null){
-                Thread.sleep(sleepTime);
-                String toSend = addTimestamp(line);
-                RabbitMQsender.publish("esperQueue", "logs", toSend);
-                System.out.println("Sending '" + toSend + "'");
-            }
-            bufferReader.close();
-
-
-            /*FileReader inputFile2 = new FileReader(myFile2);
-            BufferedReader bufferReader2 = new BufferedReader(inputFile2);
-            String line2;
+            String line = bufferReader.readLine();
 
             //send contents of second file
-            System.out.println("Sending events from file " + myFile2.getAbsolutePath().toString()+ "...");
+            FileReader inputFile2 = new FileReader(myFile2);
+            BufferedReader bufferReader2 = new BufferedReader(inputFile2);
+            String line2 = null;  //bufferReader2.readLine(); for second stream
 
-            while ((line2 = bufferReader2.readLine()) != null){
-                System.out.println(line2);
-                RabbitMQsender.publish("esperQueue2", "logs2", line2);
-            }
-            bufferReader2.close();*/
+            do {
+                Thread.sleep(sleepTime);
+                if(line != null) {
+                    String toSend = addTimestamp(line);
+                    RabbitMQsender.publish("esperQueue", "logs", toSend);
+                    System.out.println("Sending '" + toSend + "' from file " + myFile.getAbsolutePath().toString());
+                    line = bufferReader.readLine();
+                }
+
+                if(line2 != null) {
+                    RabbitMQsender.publish("esperQueue2", "logs2", line2);
+                    System.out.println("Sending '" + line2 + "' from file " + myFile2.getAbsolutePath().toString());
+                    line2 = bufferReader2.readLine();
+                }
+            } while ((line != null) || (line2 != null));
+            bufferReader.close();
+            bufferReader2.close();
         }
         catch(Exception ex){
             Logger.getLogger(Main.class.getName()).log(Level.WARN, "Error while reading file line by line:", ex);
