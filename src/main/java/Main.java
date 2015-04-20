@@ -1,10 +1,6 @@
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -37,10 +33,10 @@ public class Main {
             //send contents of second file
             FileReader inputFile2 = new FileReader(myFile2);
             BufferedReader bufferReader2 = new BufferedReader(inputFile2);
-            String line2 = bufferReader2.readLine(); //for second stream
+            String line2 = null; //bufferReader2.readLine(); for second stream
 
             do {
-//                Thread.sleep(sleepTime);
+                Thread.sleep(sleepTime);
                 if(line != null) {
                     String toSend = addTimestamp(line);
                     RabbitMQsender.publish("esperQueue", "logs", toSend);
@@ -58,7 +54,7 @@ public class Main {
             bufferReader2.close();
         }
         catch(Exception ex){
-            Logger.getLogger(Main.class.getName()).log(Level.WARN, "Error while reading file line by line:", ex);
+            System.out.println("Error while reading file line by line:");
         }
         System.out.println("Everything sent without errors\n");
     }
