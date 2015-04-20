@@ -1,15 +1,14 @@
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Created by Filip Gdovin, 410328 on 21. 1. 2015.
@@ -38,10 +37,10 @@ public class Main {
             //send contents of second file
             FileReader inputFile2 = new FileReader(myFile2);
             BufferedReader bufferReader2 = new BufferedReader(inputFile2);
-            String line2 = null;  //bufferReader2.readLine(); for second stream
+            String line2 = bufferReader2.readLine(); //for second stream
 
             do {
-                Thread.sleep(sleepTime);
+//                Thread.sleep(sleepTime);
                 if(line != null) {
                     String toSend = addTimestamp(line);
                     RabbitMQsender.publish("esperQueue", "logs", toSend);
@@ -65,10 +64,15 @@ public class Main {
     }
 
     private static String addTimestamp(String line) {
-        String currTime = LocalDateTime.now().toString();
+        final DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+        ZonedDateTime localTime = LocalDateTime.now().atZone(ZoneId.of("+02:00"));
+        String currTimeString = localTime.format(formatter);
         String pattern = "generateTimestampHere";
         int index = line.indexOf(pattern);
-        String result = line.substring(0, index) + currTime + line.substring(index + pattern.length());
+        if(index < 0) {
+            return line;
+        }
+        String result = line.substring(0, index) + currTimeString + line.substring(index + pattern.length());
         return result;
     }
 }
