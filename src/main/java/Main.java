@@ -7,15 +7,14 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Created by Filip Gdovin, 410328 on 21. 1. 2015.
+ * @author Filip Gdovin
+ * @version 21. 1. 2015
  */
 public class Main {
 
     public static void main(String[] args){
 
-        //useless in one thread
         int sleepTime = 3000; //time between events in ms for first stream
-        int sleepTime2 = 1000; //time between events in ms for second stream
 
         File myFile = new File("C:\\jsonInput.json");
         File myFile2 = new File("C:\\jsonInput2.json");
@@ -33,20 +32,20 @@ public class Main {
             //send contents of second file
             FileReader inputFile2 = new FileReader(myFile2);
             BufferedReader bufferReader2 = new BufferedReader(inputFile2);
-            String line2 = null; //bufferReader2.readLine(); for second stream
+            String line2 = null; //bufferReader2.readLine();  //null to disable second stream
 
             do {
                 Thread.sleep(sleepTime);
                 if(line != null) {
                     String toSend = addTimestamp(line);
-                    RabbitMQsender.publish("esperQueue", "logs", toSend);
-                    System.out.println("Sending '" + toSend + "' from file " + myFile.getAbsolutePath().toString());
+                    RabbitMQsender.publish("inputQueue", toSend); //will be dropped till queue is declared (so, declare)
+                    System.out.println("Sending '" + toSend + "' from file " + myFile.getAbsolutePath());
                     line = bufferReader.readLine();
                 }
 
                 if(line2 != null) {
-                    RabbitMQsender.publish("esperQueue2", "logs2", line2);
-                    System.out.println("Sending '" + line2 + "' from file " + myFile2.getAbsolutePath().toString());
+                    RabbitMQsender.publish("inputQueue2", line2); //will be dropped till queue is declared (after that it will be rejected as malformed (that file doesn't contain timestamp))
+                    System.out.println("Sending '" + line2 + "' from file " + myFile2.getAbsolutePath());
                     line2 = bufferReader2.readLine();
                 }
             } while ((line != null) || (line2 != null));
@@ -54,7 +53,8 @@ public class Main {
             bufferReader2.close();
         }
         catch(Exception ex){
-            System.out.println("Error while reading file line by line:");
+            System.out.println("Error while reading file line by line: " + ex.getMessage() + ex.getCause());
+            return;
         }
         System.out.println("Everything sent without errors\n");
     }
@@ -68,7 +68,6 @@ public class Main {
         if(index < 0) {
             return line;
         }
-        String result = line.substring(0, index) + currTimeString + line.substring(index + pattern.length());
-        return result;
+        return line.substring(0, index) + currTimeString + line.substring(index + pattern.length());
     }
 }

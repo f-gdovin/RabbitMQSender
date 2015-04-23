@@ -15,23 +15,15 @@ import com.rabbitmq.client.MessageProperties;
  */
 public class RabbitMQsender {
 
-    private static String EXCHANGE_NAME = "logs";
-    private static String QUEUE_NAME = "esperQueue";
-
-    public static void publish(String queueName, String exchangeName, String message) throws Exception {
-        QUEUE_NAME = queueName;
-        EXCHANGE_NAME = exchangeName;
+    public static void publish(String routingKey, String message) throws Exception {
+        String EXCHANGE_NAME = "amq.direct";
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
 
-        channel.exchangeDeclare(EXCHANGE_NAME, "fanout", true); //fanout ignoruje routing kluce, potom zmenit!
-        String givenQueueName = channel.queueDeclare(QUEUE_NAME, false, false, false, null).getQueue();
-        channel.queueBind(givenQueueName, EXCHANGE_NAME, "");
-        channel.basicPublish(EXCHANGE_NAME, "", MessageProperties.PERSISTENT_TEXT_PLAIN, message.getBytes());
-
+        channel.basicPublish(EXCHANGE_NAME, routingKey, MessageProperties.PERSISTENT_TEXT_PLAIN, message.getBytes());
 
         channel.close();
         connection.close();
