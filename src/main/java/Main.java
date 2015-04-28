@@ -16,8 +16,8 @@ public class Main {
 
         int sleepTime = 3000; //time between events in ms for first stream
 
-        File myFile = new File("C:\\jsonInput.json");
-        File myFile2 = new File("C:\\jsonInput2.json");
+        File myFile = loadFileFromResources("jsonInput.json");
+        File myFile2 = loadFileFromResources("sonInput2.json");
 
         if(args.length > 0){
             myFile = new File(args[0]);
@@ -35,7 +35,7 @@ public class Main {
             String line2 = null; //bufferReader2.readLine();  //null to disable second stream
 
             do {
-                Thread.sleep(sleepTime);
+//                Thread.sleep(sleepTime);
                 if(line != null) {
                     String toSend = addTimestamp(line);
                     RabbitMQsender.publish("inputQueue", toSend); //will be dropped till queue is declared (so, declare)
@@ -57,6 +57,10 @@ public class Main {
             return;
         }
         System.out.println("Everything sent without errors\n");
+    }
+
+    private static File loadFileFromResources(String fileName) throws NullPointerException{
+        return new File(RabbitMQsender.class.getClassLoader().getResource(fileName).getFile());
     }
 
     private static String addTimestamp(String line) {
