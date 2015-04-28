@@ -17,7 +17,7 @@ public class Main {
         int sleepTime = 3000; //time between events in ms for first stream
 
         File myFile = loadFileFromResources("jsonInput.json");
-        File myFile2 = loadFileFromResources("sonInput2.json");
+        File myFile2 = loadFileFromResources("jsonInput2.json");
 
         if(args.length > 0){
             myFile = new File(args[0]);
