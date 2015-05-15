@@ -52,6 +52,8 @@ public class RabbitMQsender {
             BufferedReader bufferReader = new BufferedReader(inputFile);
             String line = bufferReader.readLine();
 
+            logger.info("Sending file contents");
+
             do {
                 Thread.sleep(sleepTime);
                 if(line != null) {
