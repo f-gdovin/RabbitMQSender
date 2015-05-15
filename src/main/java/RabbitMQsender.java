@@ -25,13 +25,14 @@ public class RabbitMQsender {
 
     public void send(String[] args) {
 
-        if(args.length != 3) {
-            System.out.println("Bad number of arguments, Sender needs String queueName, String fileName, int sleepTime");
+        if(args.length != 4) {
+            System.out.println("Bad number of arguments, Sender needs String hostURL, String queueName, String fileName, int sleepTime");
         }
 
-        String queueName = args[0];
-        String fileName = args[1];
-        int sleepTime = Integer.parseInt(args[2]);
+        String hostURL = args[0];
+        String queueName = args[1];
+        String fileName = args[2];
+        int sleepTime = Integer.parseInt(args[3]);
 
         File myFile = new File(fileName);
 
@@ -44,9 +45,9 @@ public class RabbitMQsender {
             do {
                 Thread.sleep(sleepTime);
                 if(line != null) {
-                    String toSend = addTimestamp(line);
-                    this.publish(queueName, toSend); //will be dropped till queue is declared (so, declare)
-                    System.out.println("Sending '" + toSend + "' from file " + myFile.getAbsolutePath());
+//                    String toSend = addTimestamp(line);
+                    this.publish(hostURL, queueName, line); //will be dropped till queue is declared (so, declare)
+                    System.out.println("Sending '" + line + "' from file " + myFile.getAbsolutePath());
                     line = bufferReader.readLine();
                 }
             } while (line != null);
@@ -57,10 +58,6 @@ public class RabbitMQsender {
             return;
         }
         System.out.println("Everything sent without errors\n");
-    }
-
-    private static File loadFileFromResources(String fileName) throws NullPointerException{
-        return new File(RabbitMQsender.class.getClassLoader().getResource(fileName).getFile());
     }
 
     private static String addTimestamp(String line) {
@@ -75,11 +72,11 @@ public class RabbitMQsender {
         return line.substring(0, index) + currTimeString + line.substring(index + pattern.length());
     }
 
-    private void publish(String routingKey, String message) throws Exception {
+    private void publish(String hostURL, String routingKey, String message) throws Exception {
         String EXCHANGE_NAME = "esperExchange";
 
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
+        factory.setHost(hostURL);
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
 
