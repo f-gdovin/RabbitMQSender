@@ -38,10 +38,15 @@ public class RabbitMQsender {
         String queueName = args[1];
         String fileName = args[2];
         int sleepTime = Integer.parseInt(args[3]);
-
         File myFile = new File(fileName);
 
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(hostURL);
+
         try{
+            Connection connection = factory.newConnection();
+            Channel channel = connection.createChannel();
+
             //send contents of file
             FileReader inputFile = new FileReader(myFile);
             BufferedReader bufferReader = new BufferedReader(inputFile);
@@ -51,7 +56,7 @@ public class RabbitMQsender {
                 Thread.sleep(sleepTime);
                 if(line != null) {
 //                    String toSend = addTimestamp(line);
-                    this.publish(hostURL, queueName, line); //will be dropped till queue is declared (so, declare)
+                    this.publish(channel, queueName, line); //will be dropped till queue is declared (so, declare)
                     if(logger.isDebugEnabled()) {
                         logger.debug("Sending '" + line + "' from file " + myFile.getAbsolutePath());
                     }
@@ -59,6 +64,8 @@ public class RabbitMQsender {
                 }
             } while (line != null);
             bufferReader.close();
+            channel.close();
+            connection.close();
         }
         catch(Exception ex){
             logger.error("Error while reading file line by line: " + ex.getMessage());
@@ -79,17 +86,7 @@ public class RabbitMQsender {
         return line.substring(0, index) + currTimeString + line.substring(index + pattern.length());
     }
 
-    private void publish(String hostURL, String routingKey, String message) throws Exception {
-        String EXCHANGE_NAME = "esperExchange";
-
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost(hostURL);
-        Connection connection = factory.newConnection();
-        Channel channel = connection.createChannel();
-
-        channel.basicPublish(EXCHANGE_NAME, routingKey, null, message.getBytes());
-
-        channel.close();
-        connection.close();
+    private void publish(Channel channel, String routingKey, String message) throws Exception {
+        channel.basicPublish("esperExchange", routingKey, null, message.getBytes());
     }
 }
