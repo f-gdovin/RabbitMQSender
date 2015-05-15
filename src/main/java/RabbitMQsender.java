@@ -8,6 +8,8 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.MessageProperties;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,10 +25,13 @@ import java.time.format.DateTimeFormatter;
  */
 public class RabbitMQsender {
 
+    private static final Logger logger = LogManager.getLogger(RabbitMQsender.class);
+
     public void send(String[] args) {
 
         if(args.length != 4) {
-            System.out.println("Bad number of arguments, Sender needs String hostURL, String queueName, String fileName, int sleepTime");
+            logger.warn("Bad number of arguments, Sender needs String hostURL, String queueName, String fileName, int sleepTime");
+            return;
         }
 
         String hostURL = args[0];
@@ -47,17 +52,19 @@ public class RabbitMQsender {
                 if(line != null) {
 //                    String toSend = addTimestamp(line);
                     this.publish(hostURL, queueName, line); //will be dropped till queue is declared (so, declare)
-                    System.out.println("Sending '" + line + "' from file " + myFile.getAbsolutePath());
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("Sending '" + line + "' from file " + myFile.getAbsolutePath());
+                    }
                     line = bufferReader.readLine();
                 }
             } while (line != null);
             bufferReader.close();
         }
         catch(Exception ex){
-            System.out.println("Error while reading file line by line: " + ex.getMessage() + ex.getCause());
+            logger.error("Error while reading file line by line: " + ex.getMessage());
             return;
         }
-        System.out.println("Everything sent without errors\n");
+        logger.info("Everything sent without errors\n");
     }
 
     private static String addTimestamp(String line) {
