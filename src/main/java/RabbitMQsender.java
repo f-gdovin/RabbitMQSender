@@ -87,7 +87,7 @@ public class RabbitMQsender {
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
 
-        channel.basicPublish(EXCHANGE_NAME, routingKey, MessageProperties.PERSISTENT_TEXT_PLAIN, message.getBytes());
+        channel.basicPublish(EXCHANGE_NAME, routingKey, null, message.getBytes());
 
         channel.close();
         connection.close();
