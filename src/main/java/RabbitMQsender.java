@@ -7,7 +7,6 @@
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.MessageProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -57,10 +56,10 @@ public class RabbitMQsender {
             do {
                 Thread.sleep(sleepTime);
                 if(line != null) {
-//                    String toSend = addTimestamp(line);
-                    this.publish(channel, queueName, line); //will be dropped till queue is declared (so, declare)
+                    String toSend = addTimestamp(line);
+                    this.publish(channel, queueName, toSend); //will be dropped till queue is declared (so, declare)
                     if(logger.isDebugEnabled()) {
-                        logger.debug("Sending '" + line + "' from file " + myFile.getAbsolutePath());
+                        logger.debug("Sending '" + toSend + "' from file " + myFile.getAbsolutePath());
                     }
                     line = bufferReader.readLine();
                 }
