@@ -54,7 +54,9 @@ public class RabbitMQsender {
             logger.info("Sending file contents");
 
             do {
-                Thread.sleep(sleepTime);
+                if(sleepTime > 0){
+                    Thread.sleep(sleepTime);
+                }
                 if(line != null) {
                     String toSend = addTimestamp(line);
                     this.publish(channel, queueName, toSend); //will be dropped till queue is declared (so, declare)
